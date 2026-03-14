@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CoreInventory — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0b0d11;
+      --surface:   #13161d;
+      --surface2:  #181b24;
+      --border:    #1f2330;
+      --border-hi: #2e3347;
+      --amber:     #f5a623;
+      --amber-dim: #c47f0f;
+      --text:      #e8eaf0;
+      --muted:     #aab2c6;
+      --muted2:    #6b7894;
+      --danger:    #e05555;
+      --warn:      #f59e0b;
+      --success:   #3ecf8e;
+      --info:      #60a5fa;
+      --mono:      'IBM Plex Mono', monospace;
+      --sans:      'IBM Plex Sans', sans-serif;
+      --nav-h:     52px;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; }
+
+    /* ══════════════════════════════════════════
+       SCROLLBAR
+    ══════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+
+    /* ══════════════════════════════════════════
+       TOP NAVBAR
+    ══════════════════════════════════════════ */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      height: var(--nav-h);
+      background: rgba(11,13,17,.96);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 0;
+    }
+    .nav-logo {
+      font-family: var(--mono);
+      font-weight: 600;
+      font-size: .85rem;
+      letter-spacing: .08em;
+      color: var(--text);
+      text-decoration: none;
+      display: flex; 
+      align-items: center; 
+      gap: 8px;
+      margin-right: 32px;
+      flex-shrink: 0;
+    }
+    .nav-logo-mark {
+      width: 24px; 
+      height: 24px;
+      background: var(--amber);
+      display: grid; 
+      place-items: center;
+      font-size: .55rem; 
+      font-weight: 700; 
+      color: #000;
+      clip-path: polygon(0 0,85% 0,100% 15%,100% 100%,15% 100%,0 85%);
+    }
+    .nav-links {
+      display: flex; 
+      align-items: center; 
+      gap: 2px; 
+      flex: 1;
+    }
+    .nav-link {
+      display: flex; 
+      align-items: center; 
+      gap: 6px;
+      padding: 6px 14px;
+      font-family: var(--mono);
+      font-size: .7rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: none; 
+      border: none; 
+      cursor: pointer;
+      text-decoration: none;
+      transition: color .2s;
+      position: relative;
+      white-space: nowrap;
+    }
+    .nav-link:hover { color: var(--text); }
+    .nav-link.active { color: var(--amber); }
+    .nav-link.active::after {
+      content: '';
+      position: absolute; 
+      bottom: -10px; 
+      left: 14px; 
+      right: 14px;
+      height: 2px; 
+      background: var(--amber);
+    }
+    .nav-icon { 
+        font-size: .8rem; 
+        opacity: .7; 
+    }
+
+    .nav-right {
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      margin-left: auto; 
+      flex-shrink: 0;
+    }
+    .nav-search {
+      display: flex; 
+      align-items: center; 
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      width: 180px;
+    }
+    .nav-search input {
+      background: none; 
+      border: none; 
+      outline: none;
+      font-family: var(--mono); 
+      font-size: .7rem;
+      color: var(--text); 
+      width: 100%;
+    }
+    .nav-search input::placeholder { 
+        color: var(--muted2); 
+    }
+    .nav-search-icon { 
+        color: var(--muted); 
+        font-size: .75rem;
+     }
+
+    .nav-avatar {
+      width: 30px; 
+      height: 30px;
+      background: var(--amber);
+      display: grid; 
+      place-items: center;
+      font-family: var(--mono); 
+      font-size: .65rem; 
+      font-weight: 600;
+      color: #000; 
+      cursor: pointer;
+      position: relative;
+      clip-path: polygon(0 0,85% 0,100% 15%,100% 100%,15% 100%,0 85%);
+    }
+
+    /* Profile dropdown */
+    .profile-menu {
+      position: absolute; 
+      top: calc(100% + 8px); 
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      min-width: 180px;
+      display: none; 
+      flex-direction: column;
+      z-index: 100;
+    }
+     .profile-menu.open { display: flex; }
+    .profile-menu::before {
+      content: ''; 
+      position: absolute; 
+      top: -1px; 
+      left: -1px;
+      width: 10px; 
+      height: 10px;
+      border-top: 1px solid var(--amber); 
+      border-left: 1px solid var(--amber);
+    }
+    .profile-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .profile-name { font-family: var(--mono); font-size: .78rem; font-weight: 600; }
+    .profile-role { font-family: var(--mono); font-size: .62rem; color: var(--muted); letter-spacing: .06em; margin-top: 2px; }
+    .profile-item {
+      padding: 10px 14px;
+      font-family: var(--mono); font-size: .7rem; color: var(--muted);
+      cursor: pointer; background: none; border: none; text-align: left;
+      width: 100%; transition: color .15s, background .15s;
+    }
+    .profile-item:hover { background: var(--border); color: var(--text); }
+    .profile-item.danger:hover { color: var(--danger); }
+
+    /* ══════════════════════════════════════════
+       LAYOUT
+    ══════════════════════════════════════════ */
+    .app {
+      margin-top: var(--nav-h);
+      min-height: calc(100vh - var(--nav-h));
+    }
+
+    /* ══════════════════════════════════════════
+       BREADCRUMB BAR
+    ══════════════════════════════════════════ */
+    .breadbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--mono); font-size: .68rem;
+      color: var(--muted); letter-spacing: .06em;
+    }
+    .breadcrumb span { color: var(--text); }
+    .breadcrumb-sep { color: var(--muted2); }
+    .breadbar-actions { display: flex; gap: 8px; align-items: center; }
+
+    /* ══════════════════════════════════════════
+       VIEWS (shown/hidden)
+    ══════════════════════════════════════════ */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ══════════════════════════════════════════
+       DASHBOARD VIEW
+    ══════════════════════════════════════════ */
+    .dash-grid {
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    /* KPI row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 20px;
+      position: relative;
+      cursor: pointer;
+      transition: border-color .2s, transform .15s;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--kpi-color, var(--border));
+      transition: background .2s;
+    }
+        .kpi-card:hover {
+      border-color: var(--border-hi);
+      transform: translateY(-2px);
+    }
+    .kpi-icon {
+      font-size: 1.2rem; margin-bottom: 12px;
+      width: 36px; height: 36px;
+      display: grid; place-items: center;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+    }
+    .kpi-value {
+      font-family: var(--mono);
+      font-size: 2rem; font-weight: 600;
+      line-height: 1; color: var(--text);
+      margin-bottom: 6px;
+    }
+    .kpi-label {
+      font-family: var(--mono);
+      font-size: .62rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .kpi-badge {
+      position: absolute; top: 16px; right: 16px;
+      font-family: var(--mono); font-size: .6rem;
+      padding: 2px 7px; border: 1px solid currentColor;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+
+    /* Operations row (Receipt + Transfer + Delivery) */
+    .ops-row {
+      display: grid;
+      grid-template-columns: 1fr 200px 1fr;
+      gap: 14px;
+    }
+    .ops-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 22px 24px;
+      position: relative;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .ops-card:hover { border-color: var(--amber); }
+    .ops-card::after {
+      content: ''; position: absolute;
+      bottom: -1px; right: -1px;
+      width: 14px; height: 14px;
+      border-bottom: 2px solid var(--amber);
+      border-right: 2px solid var(--amber);
+      opacity: 0; transition: opacity .2s;
+    }
+    .ops-card:hover::after { opacity: 1; }
+    .ops-card-title {
+      font-family: var(--mono); font-size: .65rem;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ops-card-title-dot {
+      width: 6px; height: 6px; background: var(--amber);
+    }
+    .ops-metrics {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    .ops-metric-label {
+      font-family: var(--mono); font-size: .6rem;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 4px;
+    }
+    .ops-metric-value {
+      font-family: var(--mono); font-size: 1.4rem;
+      font-weight: 600; color: var(--text); line-height: 1;
+    }
+    .ops-metric-value.amber { color: var(--amber); }
+    .ops-arrow {
+      position: absolute; bottom: 16px; right: 20px;
+      font-family: var(--mono); font-size: .7rem;
+      color: var(--muted); transition: color .2s, transform .2s;
+    }
+    .ops-card:hover .ops-arrow { color: var(--amber); transform: translateX(4px); }
+
+    /* Transfer center card */
+    .transfer-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 22px 18px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; cursor: pointer;
+      transition: border-color .2s;
+      text-align: center;
+    }
+    .transfer-card:hover { border-color: var(--amber); }
+    .transfer-val {
+      font-family: var(--mono); font-size: 1.8rem;
+      font-weight: 600; color: var(--text); line-height: 1;
+    }
+    .transfer-label {
+      font-family: var(--mono); font-size: .6rem;
+      letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+    }
+    .transfer-icon {
+      font-size: 1rem; color: var(--muted);
+      margin: 4px 0;
+    }
+
+    /* Bottom row */
+    .dash-bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-title {
+      font-family: var(--mono); font-size: .7rem;
+      letter-spacing: .1em; text-transform: uppercase; color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .panel-title-line {
+      width: 20px; height: 2px; background: var(--amber);
+    }
+    .panel-link {
+      font-family: var(--mono); font-size: .62rem;
+      color: var(--muted); text-decoration: none; background: none;
+      border: none; cursor: pointer; transition: color .2s;
+    }
+    .panel-link:hover { color: var(--amber); }
+
+    /* Mini table */
+    .mini-table { width: 100%; border-collapse: collapse; }
+    .mini-table th {
+      font-family: var(--mono); font-size: .6rem;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted); padding: 8px 18px;
+      text-align: left; border-bottom: 1px solid var(--border);
+      font-weight: 400;
+    }
+    .mini-table td {
+      padding: 10px 18px;
+      font-family: var(--mono); font-size: .72rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    .mini-table tr:last-child td { border-bottom: none; }
+    .mini-table tr:hover td { background: rgba(255,255,255,.02); }
+    .empty-row {
+      padding: 32px 18px;
+      font-family: var(--mono); font-size: .72rem;
+      color: var(--muted); text-align: center;
+    }
+
+    /* Low-stock panel */
+    .low-stock-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .low-stock-item:last-child { border-bottom: none; }
+    .low-stock-bar-wrap {
+      flex: 1; height: 3px; background: var(--border); position: relative; overflow: hidden;
+    }
+    .low-stock-bar {
+      height: 100%; background: var(--warn);
+      transition: width .4s;
+    }
+    .low-stock-bar.out { background: var(--danger); }
+    .low-stock-name {
+      font-family: var(--mono); font-size: .72rem; min-width: 100px;
+    }
+    .low-stock-qty {
+      font-family: var(--mono); font-size: .68rem;
+      color: var(--muted); min-width: 60px; text-align: right;
+    }
+    /* ══════════════════════════════════════════
+       LIST VIEW (Receipts / Deliveries / History)
+    ══════════════════════════════════════════ */
+    .list-toolbar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-wrap: wrap;
+    }
+    .toolbar-search {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border-hi);
+      padding: 7px 12px;
+      flex: 1; min-width: 160px; max-width: 280px;
+    }
+    .toolbar-search input {
+      background: none; border: none; outline: none;
+      font-family: var(--mono); font-size: .72rem;
+      color: var(--text); width: 100%;
+    }
+    .toolbar-search input::placeholder { color: var(--muted2); }
+    .toolbar-filter {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border-hi);
+      padding: 7px 12px;
+      font-family: var(--mono); font-size: .7rem;
+      color: var(--muted); cursor: pointer;
+      white-space: nowrap;
+    }
+    .toolbar-filter select {
+      background: none; border: none; outline: none;
+      font-family: var(--mono); font-size: .7rem;
+      color: var(--text); cursor: pointer;
+    }
+    .toolbar-filter select option { background: var(--surface); }
+    .toolbar-sep { width: 1px; height: 24px; background: var(--border-hi); margin: 0 2px; }
+    .toolbar-view-btns { display: flex; gap: 4px; }
+    .view-btn {
+      background: var(--bg); border: 1px solid var(--border-hi);
+      color: var(--muted); padding: 6px 10px;
+      font-size: .75rem; cursor: pointer; transition: all .15s;
+    }
+    .view-btn.active { background: var(--amber); color: #000; border-color: var(--amber); }
+    .toolbar-spacer { flex: 1; }
+    .btn-new {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--amber); color: #000;
+      border: none; padding: 8px 16px;
+      font-family: var(--mono); font-size: .7rem;
+      font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; cursor: pointer;
+      transition: background .15s; white-space: nowrap;
+    }
+    .btn-new:hover { background: #ffc14a; }
+
+    /* Data table */
+    .data-table-wrap {
+      overflow-x: auto;
+    }
+    .data-table {
+      width: 100%; border-collapse: collapse; min-width: 600px;
+    }
+    .data-table th {
+      font-family: var(--mono); font-size: .62rem;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted); padding: 10px 16px;
+      text-align: left; background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap; font-weight: 400;
+      cursor: pointer; user-select: none;
+    }
+    .data-table th:hover { color: var(--text); }
+    .data-table td {
+      padding: 11px 16px;
+      font-family: var(--mono); font-size: .72rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text); white-space: nowrap;
+    }
+    .data-table tr { transition: background .1s; }
+    .data-table tbody tr:hover td { background: rgba(255,255,255,.025); cursor: pointer; }
+    .data-table .empty-state {
+      text-align: center; padding: 60px 20px;
+      font-family: var(--mono); font-size: .75rem; color: var(--muted);
+    }
+
+    /* Table pagination */
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .pagination-info {
+      font-family: var(--mono); font-size: .65rem; color: var(--muted);
+    }
+    .pagination-btns { display: flex; gap: 4px; }
+    .page-btn {
+      background: var(--bg); border: 1px solid var(--border-hi);
+      color: var(--muted); width: 28px; height: 28px;
+      display: grid; place-items: center;
+      font-family: var(--mono); font-size: .7rem;
+      cursor: pointer; transition: all .15s;
+    }
+    .page-btn:hover { border-color: var(--amber); color: var(--amber); }
+    .page-btn.active { background: var(--amber); color: #000; border-color: var(--amber); }
+    .page-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+    /* ══════════════════════════════════════════
+       STATUS BADGES
+    ══════════════════════════════════════════ */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 8px;
+      font-family: var(--mono); font-size: .6rem;
+      letter-spacing: .06em; text-transform: uppercase;
+      border: 1px solid currentColor;
+    }
+    .badge::before {
+      content: ''; width: 5px; height: 5px;
+      border-radius: 50%; background: currentColor;
+    }
+    .badge-draft     { color: var(--muted); }
+    .badge-waiting   { color: var(--info); }
+    .badge-ready     { color: var(--amber); }
+    .badge-done      { color: var(--success); }
+    .badge-cancelled { color: var(--danger); }
+
+    /* ══════════════════════════════════════════
+       UTILITIES
+    ══════════════════════════════════════════ */
+    .text-amber  { color: var(--amber); }
+    .text-muted  { color: var(--muted); }
+    .text-danger { color: var(--danger); }
+    .text-success{ color: var(--success); }
+
+    .loading-state {
+      display: flex; align-items: center; justify-content: center;
+      padding: 60px 20px; gap: 12px;
+      font-family: var(--mono); font-size: .72rem; color: var(--muted);
+    }
+    .spin {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border-hi);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+
+    /* ══════════════════════════════════════════
+       MOVE HISTORY specifics
+    ══════════════════════════════════════════ */
+    .move-type {
+      font-family: var(--mono); font-size: .62rem;
+      letter-spacing: .08em; text-transform: uppercase;
+      padding: 2px 7px; border: 1px solid;
+    }
+    .move-receipt  { color: var(--success); border-color: var(--success); }
+    .move-delivery { color: var(--info); border-color: var(--info); }
+    .move-transfer { color: var(--amber); border-color: var(--amber); }
+    .move-adjustment { color: var(--warn); border-color: var(--warn); }
+
+    /* ══════════════════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════════════════ */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .animate-in { animation: fadeIn .35s ease forwards; }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════ */
+    @media (max-width: 1100px) {
+      .kpi-row { grid-template-columns: repeat(3, 1fr); }
+      .ops-row { grid-template-columns: 1fr 1fr; }
+      .transfer-card { display: none; }
+    }
+    @media (max-width: 768px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .ops-row { grid-template-columns: 1fr; }
+      .dash-bottom { grid-template-columns: 1fr; }
+      .navbar { padding: 0 14px; }
+      .nav-search { display: none; }
+      .dash-grid { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════════ -->
+<nav class="navbar">
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-mark">CI</div>
+    CORE<span style="color:var(--amber)">INVENTORY</span>
+  </a>
+
+  <div class="nav-links">
+    <button class="nav-link active" data-view="dashboard" onclick="switchView('dashboard',this)">
+      <span class="nav-icon">▦</span> Dashboard
+    </button>
+    <button class="nav-link" data-view="receipts" onclick="switchView('receipts',this)">
+      <span class="nav-icon">↓</span> Receipts
+    </button>
+    <button class="nav-link" data-view="deliveries" onclick="switchView('deliveries',this)">
+      <span class="nav-icon">↑</span> Deliveries
+    </button>
+    <button class="nav-link" data-view="transfers" onclick="switchView('transfers',this)">
+      <span class="nav-icon">⇄</span> Transfers
+    </button>
+    <button class="nav-link" data-view="history" onclick="switchView('history',this)">
+      <span class="nav-icon">≡</span> Move History
+    </button>
+    <button class="nav-link" data-view="products" onclick="switchView('products',this)">
+      <span class="nav-icon">◫</span> Products
+    </button>
+  </div>
+
+  <div class="nav-right">
+    <div class="nav-search">
+      <span class="nav-search-icon">⌕</span>
+      <input type="text" placeholder="Search..." id="globalSearch" onkeydown="handleGlobalSearch(event)"/>
+    </div>
+    <div style="position:relative;">
+      <div class="nav-avatar" id="avatarBtn" onclick="toggleProfileMenu()">
+        <span id="avatarInitials">?</span>
+      </div>
+      <div class="profile-menu" id="profileMenu">
+        <div class="profile-header">
+          <div class="profile-name" id="profileName">Loading...</div>
+          <div class="profile-role" id="profileRole">—</div>
+        </div>
+        <button class="profile-item" onclick="window.location.href='login.html'">My Profile</button>
+        <button class="profile-item danger" onclick="logout()">→ Logout</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="app">
+
+  <!-- ════════════════════════════════════════════
+       BREADCRUMB BAR
+  ════════════════════════════════════════════ -->
+  <div class="breadbar">
+    <div class="breadcrumb" id="breadcrumb">
+      <span class="text-amber">Dashboard</span>
+    </div>
+    <div class="breadbar-actions" id="breadActions"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       VIEW: DASHBOARD
+  ════════════════════════════════════════════ -->
+  <div class="view active animate-in" id="view-dashboard">
+    <div class="dash-grid">
+
+      <!-- KPI Row -->
+      <div class="kpi-row" id="kpiRow">
+        <div class="kpi-card" style="--kpi-color:var(--info)" onclick="switchView('products', document.querySelector('[data-view=products]'))">
+          <div class="kpi-icon">◫</div>
+          <div class="kpi-value" id="kpi-products">—</div>
+          <div class="kpi-label">Total Products</div>
+        </div>
+        <div class="kpi-card" style="--kpi-color:var(--warn)" onclick="switchView('products', document.querySelector('[data-view=products]'))">
+          <div class="kpi-icon">⚠</div>
+          <div class="kpi-value text-amber" id="kpi-lowstock">—</div>
+          <div class="kpi-label">Low Stock</div>
+          <div class="kpi-badge text-warn" style="color:var(--warn);border-color:var(--warn)">Alert</div>
+        </div>
+        <div class="kpi-card" style="--kpi-color:var(--danger)">
+          <div class="kpi-icon">⊘</div>
+          <div class="kpi-value text-danger" id="kpi-outofstock">—</div>
+          <div class="kpi-label">Out of Stock</div>
+          <div class="kpi-badge" style="color:var(--danger);border-color:var(--danger)">Critical</div>
+        </div>
+        <div class="kpi-card" style="--kpi-color:var(--success)" onclick="switchView('receipts', document.querySelector('[data-view=receipts]'))">
+          <div class="kpi-icon">↓</div>
+          <div class="kpi-value text-success" id="kpi-receipts">—</div>
+          <div class="kpi-label">Pending Receipts</div>
+        </div>
+        <div class="kpi-card" style="--kpi-color:var(--amber)" onclick="switchView('deliveries', document.querySelector('[data-view=deliveries]'))">
+          <div class="kpi-icon">↑</div>
+          <div class="kpi-value text-amber" id="kpi-deliveries">—</div>
+          <div class="kpi-label">Pending Deliveries</div>
+        </div>
+      </div>
+
+      <!-- Operations Row -->
+      <div class="ops-row">
+        <!-- Receipts ops card -->
+        <div class="ops-card" onclick="switchView('receipts', document.querySelector('[data-view=receipts]'))">
+          <div class="ops-card-title">
+            <div class="ops-card-title-dot"></div>
+            Receipt Operations
+          </div>
+          <div class="ops-metrics">
+            <div>
+              <div class="ops-metric-label">Pending</div>
+              <div class="ops-metric-value amber" id="ops-pending-receipts">—</div>
+            </div>
+            <div>
+              <div class="ops-metric-label">Dispatches</div>
+              <div class="ops-metric-value" id="ops-done-receipts">—</div>
+            </div>
+          </div>
+          <div class="ops-arrow">View All →</div>
+        </div>
+
+        <!-- Internal Transfer center -->
+        <div class="transfer-card" onclick="switchView('transfers', document.querySelector('[data-view=transfers]'))">
+          <div class="transfer-label">Transfers</div>
+          <div class="transfer-val" id="ops-transfers">—</div>
+          <div class="transfer-icon">⇄</div>
+          <div class="transfer-label" style="font-size:.58rem;">Scheduled</div>
+        </div>
+
+        <!-- Delivery ops card -->
+        <div class="ops-card" onclick="switchView('deliveries', document.querySelector('[data-view=deliveries]'))">
+          <div class="ops-card-title">
+            <div class="ops-card-title-dot"></div>
+            Delivery Operations
+          </div>
+          <div class="ops-metrics">
+            <div>
+              <div class="ops-metric-label">To Deliver</div>
+              <div class="ops-metric-value amber" id="ops-pending-deliveries">—</div>
+            </div>
+            <div>
+              <div class="ops-metric-label">Dispatches</div>
+              <div class="ops-metric-value" id="ops-done-deliveries">—</div>
+            </div>
+          </div>
+          <div class="ops-arrow">View All →</div>
+        </div>
+      </div>
+
+      <!-- Bottom panels -->
+      <div class="dash-bottom">
+        <!-- Recent Receipts -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><div class="panel-title-line"></div> Recent Receipts</div>
+            <button class="panel-link" onclick="switchView('receipts', document.querySelector('[data-view=receipts]'))">View All →</button>
+          </div>
+          <table class="mini-table">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Supplier</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="dash-recent-receipts">
+              <tr><td colspan="4" class="empty-row"><div class="spin" style="margin:0 auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Recent Deliveries -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><div class="panel-title-line"></div> Recent Deliveries</div>
+            <button class="panel-link" onclick="switchView('deliveries', document.querySelector('[data-view=deliveries]'))">View All →</button>
+          </div>
+          <table class="mini-table">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Customer</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="dash-recent-deliveries">
+              <tr><td colspan="4" class="empty-row"><div class="spin" style="margin:0 auto"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Low Stock Alerts -->
+        <div class="panel" style="grid-column:1/-1">
+          <div class="panel-header">
+            <div class="panel-title"><div class="panel-title-line"></div> Low / Out of Stock Alerts</div>
+            <button class="panel-link" onclick="switchView('products', document.querySelector('[data-view=products]'))">View Products →</button>
+          </div>
+          <div id="dash-lowstock-list">
+            <div class="loading-state"><div class="spin"></div> Loading...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       VIEW: RECEIPTS
+  ════════════════════════════════════════════ -->
+  <div class="view animate-in" id="view-receipts">
+    <div class="list-toolbar">
+      <div class="toolbar-search">
+        <span style="color:var(--muted);font-size:.75rem">⌕</span>
+        <input type="text" placeholder="Search reference or supplier..." id="receipts-search" oninput="filterReceipts()"/>
+      </div>
+      <div class="toolbar-filter">
+        Status:&nbsp;
+        <select id="receipts-status" onchange="filterReceipts()">
+          <option value="">All</option>
+          <option>draft</option><option>waiting</option><option>ready</option>
+          <option>done</option><option>cancelled</option>
+        </select>
+      </div>
+      <div class="toolbar-sep"></div>
+      <div class="toolbar-view-btns">
+        <button class="view-btn active" title="List view">☰</button>
+      </div>
+      <div class="toolbar-spacer"></div>
+      <button class="btn-new" onclick="alert('Receipt creation form coming soon!')">+ New Receipt</button>
+    </div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Supplier</th>
+            <th>Scheduled Date</th>
+            <th>Destination</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="receipts-tbody">
+          <tr><td colspan="7"><div class="loading-state"><div class="spin"></div> Loading...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="receipts-pagination" style="display:none"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       VIEW: DELIVERIES
+  ════════════════════════════════════════════ -->
+  <div class="view animate-in" id="view-deliveries">
+    <div class="list-toolbar">
+      <div class="toolbar-search">
+        <span style="color:var(--muted);font-size:.75rem">⌕</span>
+        <input type="text" placeholder="Search reference or customer..." id="deliveries-search" oninput="filterDeliveries()"/>
+      </div>
+      <div class="toolbar-filter">
+        Status:&nbsp;
+        <select id="deliveries-status" onchange="filterDeliveries()">
+          <option value="">All</option>
+          <option>draft</option><option>waiting</option><option>ready</option>
+          <option>done</option><option>cancelled</option>
+        </select>
+      </div>
+      <div class="toolbar-sep"></div>
+      <div class="toolbar-spacer"></div>
+      <button class="btn-new" onclick="alert('Delivery creation form coming soon!')">+ New Delivery</button>
+    </div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Customer</th>
+            <th>Scheduled Date</th>
+            <th>Source Location</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="deliveries-tbody">
+          <tr><td colspan="7"><div class="loading-state"><div class="spin"></div> Loading...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="deliveries-pagination" style="display:none"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       VIEW: TRANSFERS
+  ════════════════════════════════════════════ -->
+  <div class="view animate-in" id="view-transfers">
+    <div class="list-toolbar">
+      <div class="toolbar-search">
+        <span style="color:var(--muted);font-size:.75rem">⌕</span>
+        <input type="text" placeholder="Search reference..." id="transfers-search" oninput="filterTransfers()"/>
+      </div>
+      <div class="toolbar-filter">
+        Status:&nbsp;
+        <select id="transfers-status" onchange="filterTransfers()">
+          <option value="">All</option>
+          <option>draft</option><option>waiting</option><option>ready</option>
+          <option>done</option><option>cancelled</option>
+        </select>
+      </div>
+      <div class="toolbar-spacer"></div>
+      <button class="btn-new" onclick="alert('Transfer creation form coming soon!')">+ New Transfer</button>
+    </div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Scheduled Date</th>
+            <th>Status</th>
+            <th>Created By</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="transfers-tbody">
+          <tr><td colspan="7"><div class="loading-state"><div class="spin"></div> Loading...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       VIEW: MOVE HISTORY
+  ════════════════════════════════════════════ -->
+  <div class="view animate-in" id="view-history">
+    <div class="list-toolbar">
+      <div class="toolbar-filter">
+        Type:&nbsp;
+        <select id="history-type" onchange="loadHistory()">
+          <option value="">All</option>
+          <option value="receipt">Receipt</option>
+          <option value="delivery">Delivery</option>
+          <option value="transfer">Transfer</option>
+          <option value="adjustment">Adjustment</option>
+        </select>
+      </div>
+      <div class="toolbar-filter">
+        From:&nbsp;<input type="date" id="history-from" style="background:none;border:none;outline:none;font-family:var(--mono);font-size:.7rem;color:var(--text);cursor:pointer" onchange="loadHistory()"/>
+      </div>
+      <div class="toolbar-filter">
+        To:&nbsp;<input type="date" id="history-to" style="background:none;border:none;outline:none;font-family:var(--mono);font-size:.7rem;color:var(--text);cursor:pointer" onchange="loadHistory()"/>
+      </div>
+      <div class="toolbar-spacer"></div>
+      <span style="font-family:var(--mono);font-size:.65rem;color:var(--muted);" id="history-count"></span>
+    </div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Product</th>
+            <th>Type</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Qty</th>
+            <th>Created By</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody">
+          <tr><td colspan="8"><div class="loading-state"><div class="spin"></div> Loading...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="history-pagination"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       VIEW: PRODUCTS
+  ════════════════════════════════════════════ -->
+  <div class="view animate-in" id="view-products">
+    <div class="list-toolbar">
+      <div class="toolbar-search">
+        <span style="color:var(--muted);font-size:.75rem">⌕</span>
+        <input type="text" placeholder="Search name or SKU..." id="products-search" oninput="filterProducts()"/>
+      </div>
+      <div class="toolbar-filter">
+        Stock:&nbsp;
+        <select id="products-stock" onchange="filterProducts()">
+          <option value="">All</option>
+          <option value="true">Low / Out of Stock</option>
+        </select>
+      </div>
+      <div class="toolbar-spacer"></div>
+      <button class="btn-new" onclick="alert('Product creation form coming soon!')">+ New Product</button>
+    </div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Unit</th>
+            <th>Total Stock</th>
+            <th>Reorder Level</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="products-tbody">
+          <tr><td colspan="7"><div class="loading-state"><div class="spin"></div> Loading...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- /.app -->
+
+<script>
+  // ════════════════════════════════════════════
+  //  AUTH GUARD
+  // ════════════════════════════════════════════
+  const token = localStorage.getItem('ci_token');
+  const user  = JSON.parse(localStorage.getItem('ci_user') || 'null');
+  if (!token) window.location.href = 'login.html';
+
+  // Init user UI
+  if (user) {
+    const initials = user.name ? user.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() : '?';
+    document.getElementById('avatarInitials').textContent = initials;
+    document.getElementById('profileName').textContent    = user.name || '—';
+    document.getElementById('profileRole').textContent    = user.role === 'manager' ? 'Inventory Manager' : 'Warehouse Staff';
+  }
+
+  // ════════════════════════════════════════════
+  //  HELPERS
+  // ════════════════════════════════════════════
+  const API = '';
+  const AUTH = { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } };
+
+  async function apiFetch(url) {
+    const res = await fetch(API + url, AUTH);
+    if (res.status === 401) { logout(); return null; }
+    return res.json();
+  }
+
+  function fmtDate(d) {
+    if (!d) return '<span class="text-muted">—</span>';
+    return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function badge(status) {
+    return `<span class="badge badge-${status}">${status}</span>`;
+  }
+
+  function logout() {
+    localStorage.removeItem('ci_token');
+    localStorage.removeItem('ci_user');
+    window.location.href = 'login.html';
+  }
+
+  // ════════════════════════════════════════════
+  //  PROFILE MENU
+  // ════════════════════════════════════════════
+  document.getElementById('avatarBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('profileMenu').classList.toggle('open');
+  });
+  document.addEventListener('click', () => {
+    document.getElementById('profileMenu').classList.remove('open');
+  });
+
+  function toggleProfileMenu() {
+    // handled by click above
+  }
+
+  
+  // ════════════════════════════════════════════
+  //  VIEW SWITCHING
+  // ════════════════════════════════════════════
+  const breadLabels = {
+    dashboard:  'Dashboard',
+    receipts:   'View › <span>Receipts</span>',
+    deliveries: 'View › <span>Delivery</span>',
+    transfers:  'View › <span>Internal Transfers</span>',
+    history:    'View › <span>Move History</span>',
+    products:   'View › <span>Products</span>',
+  };
+
+  let currentView = 'dashboard';
+  const loaders = { receipts: false, deliveries: false, transfers: false, history: false, products: false };
+
+  function switchView(name, btn) {
+    // Hide all views
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+    document.getElementById(`view-${name}`).classList.add('active');
+    if (btn) btn.classList.add('active');
+
+    document.getElementById('breadcrumb').innerHTML =
+      `<span class="text-amber">${breadLabels[name] || name}</span>`;
+
+    currentView = name;
+
+    // Lazy-load data
+    if (name === 'dashboard')   loadDashboard();
+    if (name === 'receipts'  && !loaders.receipts)   { loaders.receipts=true;   loadReceipts(); }
+    if (name === 'deliveries'&& !loaders.deliveries) { loaders.deliveries=true; loadDeliveries(); }
+    if (name === 'transfers' && !loaders.transfers)  { loaders.transfers=true;  loadTransfers(); }
+    if (name === 'history'   && !loaders.history)    { loaders.history=true;    loadHistory(); }
+    if (name === 'products'  && !loaders.products)   { loaders.products=true;   loadProducts(); }
+
+    window.scrollTo(0,0);
+  }
+
+  // ════════════════════════════════════════════
+  //  DASHBOARD DATA
+  // ════════════════════════════════════════════
+  async function loadDashboard() {
+    const data = await apiFetch('/api/dashboard');
+    if (!data) return;
+    const k = data.kpis;
+
+    document.getElementById('kpi-products').textContent   = k.totalProducts;
+    document.getElementById('kpi-lowstock').textContent   = k.lowStock;
+    document.getElementById('kpi-outofstock').textContent = k.outOfStock;
+    document.getElementById('kpi-receipts').textContent   = k.pendingReceipts;
+    document.getElementById('kpi-deliveries').textContent = k.pendingDeliveries;
+
+    document.getElementById('ops-pending-receipts').textContent  = k.pendingReceipts;
+    document.getElementById('ops-done-receipts').textContent     = '—';
+    document.getElementById('ops-transfers').textContent         = k.scheduledTransfers;
+    document.getElementById('ops-pending-deliveries').textContent= k.pendingDeliveries;
+    document.getElementById('ops-done-deliveries').textContent   = '—';
+
+    // Recent receipts table
+    const rr = document.getElementById('dash-recent-receipts');
+    if (!data.recentReceipts.length) {
+      rr.innerHTML = `<tr><td colspan="4" class="empty-row">No receipts yet</td></tr>`;
+    } else {
+      rr.innerHTML = data.recentReceipts.map(r => `
+        <tr onclick="switchView('receipts', document.querySelector('[data-view=receipts]'))" style="cursor:pointer">
+          <td class="text-amber">${r.reference}</td>
+          <td>${r.supplier_name || '<span class="text-muted">—</span>'}</td>
+          <td>${badge(r.status)}</td>
+          <td>${fmtDate(r.created_at)}</td>
+        </tr>`).join('');
+    }
+
+    // Recent deliveries table
+    const rd = document.getElementById('dash-recent-deliveries');
+    if (!data.recentDeliveries.length) {
+      rd.innerHTML = `<tr><td colspan="4" class="empty-row">No deliveries yet</td></tr>`;
+    } else {
+      rd.innerHTML = data.recentDeliveries.map(d => `
+        <tr onclick="switchView('deliveries', document.querySelector('[data-view=deliveries]'))" style="cursor:pointer">
+          <td class="text-amber">${d.reference}</td>
+          <td>${d.customer_name || '<span class="text-muted">—</span>'}</td>
+          <td>${badge(d.status)}</td>
+          <td>${fmtDate(d.created_at)}</td>
+        </tr>`).join('');
+    }
+
+    
+    // Low stock list
+    const ls = document.getElementById('dash-lowstock-list');
+    if (!data.lowStockProducts.length) {
+      ls.innerHTML = `<div class="loading-state" style="color:var(--success)">✓ All products are sufficiently stocked</div>`;
+    } else {
+      ls.innerHTML = data.lowStockProducts.map(p => {
+        const pct = p.reorder_level > 0
+          ? Math.min(100, Math.round((p.total_stock / p.reorder_level) * 100))
+          : (p.total_stock > 0 ? 100 : 0);
+        const isOut = p.total_stock === 0;
+        return `
+          <div class="low-stock-item">
+            <div class="low-stock-name">${p.name}</div>
+            <div class="low-stock-bar-wrap">
+              <div class="low-stock-bar ${isOut?'out':''}" style="width:${pct}%"></div>
+            </div>
+            <div class="low-stock-qty ${isOut?'text-danger':'text-amber'}">
+              ${p.total_stock} ${p.unit_of_measure}
+            </div>
+            <div style="font-family:var(--mono);font-size:.62rem;color:var(--muted);min-width:70px;text-align:right">
+              ${isOut ? '<span class="text-danger">OUT</span>' : `Min: ${p.reorder_level}`}
+            </div>
+          </div>`;
+      }).join('');
+    }
+  }
+ // ════════════════════════════════════════════
+  //  RECEIPTS
+  // ════════════════════════════════════════════
+  let allReceipts = [];
+
+  async function loadReceipts() {
+    const data = await apiFetch('/api/receipts');
+    if (!data) return;
+    allReceipts = data;
+    renderReceipts(allReceipts);
+  }
+
+  function filterReceipts() {
+    const q      = document.getElementById('receipts-search').value.toLowerCase();
+    const status = document.getElementById('receipts-status').value;
+    const filtered = allReceipts.filter(r =>
+      (!q || r.reference.toLowerCase().includes(q) || (r.supplier_name||'').toLowerCase().includes(q)) &&
+      (!status || r.status === status)
+    );
+    renderReceipts(filtered);
+  }
+
+  function renderReceipts(rows) {
+    const tbody = document.getElementById('receipts-tbody');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No receipts found</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td class="text-amber">${r.reference}</td>
+        <td>${r.supplier_name || '<span class="text-muted">—</span>'}</td>
+        <td>${fmtDate(r.scheduled_date)}</td>
+        <td>${r.location_name || '<span class="text-muted">—</span>'}</td>
+        <td>${badge(r.status)}</td>
+        <td>${fmtDate(r.created_at)}</td>
+        <td>
+          <button onclick="alert('Detail view coming soon!')" style="background:none;border:1px solid var(--border-hi);color:var(--muted);padding:4px 10px;font-family:var(--mono);font-size:.62rem;cursor:pointer;transition:color .15s,border-color .15s" onmouseover="this.style.color='var(--amber)';this.style.borderColor='var(--amber)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border-hi)'">View</button>
+        </td>
+      </tr>`).join('');
+  }
+   // ════════════════════════════════════════════
+  //  DELIVERIES
+  // ════════════════════════════════════════════
+  let allDeliveries = [];
+
+  async function loadDeliveries() {
+    const data = await apiFetch('/api/deliveries');
+    if (!data) return;
+    allDeliveries = data;
+    renderDeliveries(allDeliveries);
+  }
+
+  function filterDeliveries() {
+    const q      = document.getElementById('deliveries-search').value.toLowerCase();
+    const status = document.getElementById('deliveries-status').value;
+    const filtered = allDeliveries.filter(d =>
+      (!q || d.reference.toLowerCase().includes(q) || (d.customer_name||'').toLowerCase().includes(q)) &&
+      (!status || d.status === status)
+    );
+    renderDeliveries(filtered);
+  }
+
+  function renderDeliveries(rows) {
+    const tbody = document.getElementById('deliveries-tbody');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No deliveries found</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(d => `
+      <tr>
+        <td class="text-amber">${d.reference}</td>
+        <td>${d.customer_name || '<span class="text-muted">—</span>'}</td>
+        <td>${fmtDate(d.scheduled_date)}</td>
+        <td>${d.location_name || '<span class="text-muted">—</span>'}</td>
+        <td>${badge(d.status)}</td>
+        <td>${fmtDate(d.created_at)}</td>
+        <td>
+          <button onclick="alert('Detail view coming soon!')" style="background:none;border:1px solid var(--border-hi);color:var(--muted);padding:4px 10px;font-family:var(--mono);font-size:.62rem;cursor:pointer;transition:color .15s,border-color .15s" onmouseover="this.style.color='var(--amber)';this.style.borderColor='var(--amber)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border-hi)'">View</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  // ════════════════════════════════════════════
+  //  TRANSFERS
+  // ════════════════════════════════════════════
+  let allTransfers = [];
+
+  async function loadTransfers() {
+    const data = await apiFetch('/api/transfers');
+    if (!data) return;
+    allTransfers = data;
+    renderTransfers(allTransfers);
+  }
+
+  function filterTransfers() {
+    const q      = document.getElementById('transfers-search').value.toLowerCase();
+    const status = document.getElementById('transfers-status').value;
+    const filtered = allTransfers.filter(t =>
+      (!q || t.reference.toLowerCase().includes(q)) &&
+      (!status || t.status === status)
+    );
+    renderTransfers(filtered);
+  }
+
+  function renderTransfers(rows) {
+    const tbody = document.getElementById('transfers-tbody');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No transfers found</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(t => `
+      <tr>
+        <td class="text-amber">${t.reference}</td>
+        <td>${t.from_warehouse_name} › ${t.from_location_name}</td>
+        <td>${t.to_warehouse_name} › ${t.to_location_name}</td>
+        <td>${fmtDate(t.scheduled_date)}</td>
+        <td>${badge(t.status)}</td>
+        <td>${t.created_by_name}</td>
+        <td>
+          <button onclick="alert('Detail view coming soon!')" style="background:none;border:1px solid var(--border-hi);color:var(--muted);padding:4px 10px;font-family:var(--mono);font-size:.62rem;cursor:pointer" onmouseover="this.style.color='var(--amber)';this.style.borderColor='var(--amber)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border-hi)'">View</button>
+        </td>
+      </tr>`).join('');
+  }
+ // ════════════════════════════════════════════
+  //  MOVE HISTORY (paginated)
+  // ════════════════════════════════════════════
+  let historyPage = 1;
+  const HISTORY_LIMIT = 50;
+
+  async function loadHistory() {
+    historyPage = 1;
+    const type  = document.getElementById('history-type').value;
+    const from  = document.getElementById('history-from').value;
+    const to    = document.getElementById('history-to').value;
+    const params= new URLSearchParams({ page:1, limit:HISTORY_LIMIT });
+    if (type) params.set('reference_type', type);
+    if (from) params.set('from_date', from);
+    if (to)   params.set('to_date', to);
+
+    document.getElementById('history-tbody').innerHTML =
+      `<tr><td colspan="8"><div class="loading-state"><div class="spin"></div> Loading...</div></td></tr>`;
+
+    const data = await apiFetch(`/api/moves?${params}`);
+    if (!data) return;
+    renderHistory(data);
+  }
+
+  function renderHistory(data) {
+    document.getElementById('history-count').textContent = `${data.total} record${data.total !== 1 ? 's' : ''}`;
+    const tbody = document.getElementById('history-tbody');
+    if (!data.data.length) {
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No moves found</td></tr>`;
+      document.getElementById('history-pagination').innerHTML = '';
+      return;
+    }
+    tbody.innerHTML = data.data.map(m => `
+      <tr>
+        <td class="text-muted">#${m.id}</td>
+        <td>
+          <div style="font-size:.72rem">${m.product_name}</div>
+          <div style="font-size:.6rem;color:var(--muted)">${m.product_sku}</div>
+        </td>
+        <td><span class="move-type move-${m.reference_type}">${m.reference_type}</span></td>
+        <td>${m.from_location_name || '<span class="text-muted">External</span>'}</td>
+        <td>${m.to_location_name   || '<span class="text-muted">External</span>'}</td>
+        <td><strong>${m.qty}</strong> <span class="text-muted">${m.unit_of_measure}</span></td>
+        <td>${m.created_by_name}</td>
+        <td>${fmtDate(m.created_at)}</td>
+      </tr>`).join('');
+
+    // Pagination
+    const totalPages = Math.ceil(data.total / HISTORY_LIMIT);
+    const pag = document.getElementById('history-pagination');
+    if (totalPages <= 1) { pag.innerHTML = ''; return; }
+    let html = `<div class="pagination-info">Page ${data.page} of ${totalPages} · ${data.total} records</div>`;
+    html += `<div class="pagination-btns">`;
+    html += `<button class="page-btn" ${data.page===1?'disabled':''} onclick="historyPage=${data.page-1};loadHistoryPage()">‹</button>`;
+    for (let i = Math.max(1,data.page-2); i <= Math.min(totalPages, data.page+2); i++) {
+      html += `<button class="page-btn ${i===data.page?'active':''}" onclick="historyPage=${i};loadHistoryPage()">${i}</button>`;
+    }
+    html += `<button class="page-btn" ${data.page===totalPages?'disabled':''} onclick="historyPage=${data.page+1};loadHistoryPage()">›</button>`;
+    html += `</div>`;
+    pag.innerHTML = html;
+    pag.style.display = 'flex';
+  }
+
+  async function loadHistoryPage() {
+    const type  = document.getElementById('history-type').value;
+    const from  = document.getElementById('history-from').value;
+    const to    = document.getElementById('history-to').value;
+    const params= new URLSearchParams({ page: historyPage, limit: HISTORY_LIMIT });
+    if (type) params.set('reference_type', type);
+    if (from) params.set('from_date', from);
+    if (to)   params.set('to_date', to);
+    const data = await apiFetch(`/api/moves?${params}`);
+    if (data) renderHistory(data);
+  }
+  
+  // ════════════════════════════════════════════
+  //  PRODUCTS
+  // ════════════════════════════════════════════
+  let allProducts = [];
+
+  async function loadProducts() {
+    const data = await apiFetch('/api/products');
+    if (!data) return;
+    allProducts = data;
+    renderProducts(allProducts);
+  }
+
+  function filterProducts() {
+    const q   = document.getElementById('products-search').value.toLowerCase();
+    const low = document.getElementById('products-stock').value === 'true';
+    const filtered = allProducts.filter(p =>
+      (!q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)) &&
+      (!low || p.stock_status !== 'in_stock')
+    );
+    renderProducts(filtered);
+  }
+
+  function renderProducts(rows) {
+    const tbody = document.getElementById('products-tbody');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No products found</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(p => {
+      const statusMap = {
+        in_stock:     `<span class="badge badge-done">In Stock</span>`,
+        low_stock:    `<span class="badge badge-ready">Low Stock</span>`,
+        out_of_stock: `<span class="badge badge-cancelled">Out of Stock</span>`,
+      };
+      return `
+        <tr>
+          <td class="text-muted">${p.sku}</td>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.category_name || '<span class="text-muted">—</span>'}</td>
+          <td>${p.unit_of_measure}</td>
+          <td><strong>${p.total_stock}</strong></td>
+          <td>${p.reorder_level || 0}</td>
+          <td>${statusMap[p.stock_status] || ''}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ════════════════════════════════════════════
+  //  GLOBAL SEARCH
+  // ════════════════════════════════════════════
+  function handleGlobalSearch(e) {
+    if (e.key === 'Enter') {
+      const q = document.getElementById('globalSearch').value.trim();
+      if (!q) return;
+      // Search products
+      switchView('products', document.querySelector('[data-view=products]'));
+      setTimeout(() => {
+        document.getElementById('products-search').value = q;
+        filterProducts();
+      }, 100);
+    }
+  }
+
+  // ════════════════════════════════════════════
+  //  INIT
+  // ════════════════════════════════════════════
+  loadDashboard();
+</script>
+</body>
+</html>
